@@ -9,7 +9,24 @@
 
 %%
 
+%{
+	/* Exercice 1: Instruction if */ 
+%}
 if	return TOK_IF;
+then return TOK_THEN;
+elseif return TOK_ELSEIF;
+else return TOK_ELSE;
+end return TOK_END;
+endif return TOK_ENDIF;
+or return TOK_BOOL_OR;
+and return TOK_BOOL_AND;
+not return TOK_BOOL_NOT;
+"==" return TOK_BOOL_EQ;
+"!=" return TOK_BOOL_NEQ;
+">=" return TOK_BOOL_GTE;
+">" return TOK_BOOL_GT;
+"<=" return TOK_BOOL_LTE;
+"<" return TOK_BOOL_LT; 
 
 0|[1-9][0-9]* {
 	sscanf(yytext, "%lu", &yylval.number);

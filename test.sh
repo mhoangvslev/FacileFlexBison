@@ -1,9 +1,8 @@
 #!/bin/sh
 
-cd ../test/
-../build/facile "$2.facile"
+build/facile "$1.facile"
 export TERM=xterm
-ilasm "$2.il"
+ilasm "$1.il"
 
-chmod 755 "$2.exe"
-./"$2.exe"
+chmod 755 "$1.exe"
+sh "$1.exe"

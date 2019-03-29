@@ -36,6 +36,23 @@ extern void produce_code(GNode * node);
 %token TOK_PRINT
 %token TOK_READ
 
+%token TOK_IF
+%token TOK_THEN;
+%token TOK_ELSEIF;
+%token TOK_ELSE;
+%token TOK_END;
+%token TOK_ENDIF;
+
+%token TOK_BOOL_OR;
+%token TOK_BOOL_AND;
+%token TOK_BOOL_EQ;
+%token TOK_BOOL_NEQ;
+%token TOK_BOOL_GTE;
+%token TOK_BOOL_GT;
+%token TOK_BOOL_LTE;
+%token TOK_BOOL_LT; 
+%token TOK_BOOL_NOT;
+
 %type<node> code
 %type<node> expr
 %type<node> instruction
@@ -43,6 +60,13 @@ extern void produce_code(GNode * node);
 %type<node> print
 %type<node> read
 %type<node> affectation
+
+/*Extension*/
+%type<node> boolean_expr
+%type<node> if-statement
+%type<node> else
+%type<node> elseif
+%type<node> endif
 
 %union {
 	gulong number;
@@ -68,18 +92,13 @@ code:
 		g_node_append($$, $2);		
 	}
 |
+	%empty
 	{
 		$$ = g_node_new("");
 	}
 ;
 
-instruction:
-	affectation
-|
-	print
-|
-	read
-;
+instruction: affectation | print | read | if-statement;
 
 ident:
 	TOK_IDENT
@@ -162,6 +181,107 @@ expr:
 	}
 ;
 
+boolean_expr:
+	boolean_expr TOK_BOOL_AND boolean_expr
+	{
+		$$ = g_node_new("and");
+		g_node_append($$, $1);
+		g_node_append($$, $3);
+	}
+|
+	expr TOK_BOOL_EQ expr
+	{
+		$$ = g_node_new("eq");
+		g_node_append($$, $1);
+		g_node_append($$, $3);
+	}
+|
+	expr TOK_BOOL_GT expr
+	{
+		$$ = g_node_new("gt");
+		g_node_append($$, $1);
+		g_node_append($$, $3);
+	}
+|
+	expr TOK_BOOL_GTE expr
+	{
+		$$ = g_node_new("gte");
+		g_node_append($$, $1);
+		g_node_append($$, $3);
+	}
+|
+	expr TOK_BOOL_LT expr
+	{
+		$$ = g_node_new("lt");
+		g_node_append($$, $1);
+		g_node_append($$, $3);
+	}
+|
+	expr TOK_BOOL_LTE expr
+	{
+		$$ = g_node_new("lte");
+		g_node_append($$, $1);
+		g_node_append($$, $3);
+	}
+|
+	expr TOK_BOOL_NEQ expr
+	{
+		$$ = g_node_new("neq");
+		g_node_append($$, $1);
+		g_node_append($$, $3);
+	}
+|
+	boolean_expr TOK_BOOL_OR boolean_expr
+	{
+		$$ = g_node_new("or");
+		g_node_append($$, $1);
+		g_node_append($$, $3);
+	}
+|
+	TOK_BOOL_NOT boolean_expr
+	{
+		$$ = g_node_new("not");
+		g_node_append($$, $2);
+	}
+;
+
+if-statement: 
+	TOK_IF boolean_expr TOK_THEN code elseif else endif
+	{
+		$$ = g_node_new("if");
+		g_node_append($$, $2);
+		g_node_append($$, $4);
+		g_node_append($$, $5);
+		g_node_append($$, $6);
+		g_node_append($$, $7);
+	}
+;
+
+endif: TOK_END | TOK_ENDIF;
+
+elseif: 
+	elseif TOK_ELSEIF boolean_expr TOK_THEN code elseif
+	{
+		$$ = g_node_new("elseif");
+		g_node_append($$, $1);
+		g_node_append($$, $3);
+		g_node_append($$, $5);
+		g_node_append($$, $6);
+	}
+|
+	%empty
+	{
+		$$ = g_node_new("");
+	}
+;
+else:
+	TOK_ELSE code
+	{
+		$$ = g_node_new("else");
+		g_node_append($$, $2);
+	}
+;
+
 %%
 
 #include <stdlib.h>
@@ -229,7 +349,112 @@ void produce_code(GNode * node)
 		fprintf(stream, "	call string class [mscorlib]System.Console::ReadLine()\n");
 		fprintf(stream, "	call int32 int32::Parse(string)\n");
 		fprintf(stream, "	stloc\t%ld\n", (long) g_node_nth_child(g_node_nth_child(node, 0), 0)->data - 1);
+	} 
+
+	/* Handle boolean_expr */
+	else if(node->data == "and"){
+		produce_code(g_node_nth_child(node, 0));
+		produce_code(g_node_nth_child(node, 1));
+		fprintf(stream, "	and\n");
 	}
+	
+	else if(node->data == "or"){
+		produce_code(g_node_nth_child(node, 0));
+		produce_code(g_node_nth_child(node, 1));
+		fprintf(stream, "	or\n");
+	}
+
+	else if(node->data == "not"){
+		produce_code(g_node_nth_child(node, 0)); // 'a' la valeur dans le stack
+		fprintf(stream, "	ldc.i4.0\nceq\n"); // 1 si a == 0  sinon 0
+	}
+
+	else if(node->data == "eq"){
+		produce_code(g_node_nth_child(node, 0));
+		produce_code(g_node_nth_child(node, 1));
+		fprintf(stream, "	ceq\n");
+	}
+
+	else if(node->data == "neq"){
+		produce_code(g_node_nth_child(node, 0));
+		produce_code(g_node_nth_child(node, 1));
+		fprintf(stream, "	ceq\nldc.i4.0\nceq\n"); // litterally "equal + not"
+	}
+
+	else if(node->data == "gt"){
+		produce_code(g_node_nth_child(node, 0));
+		produce_code(g_node_nth_child(node, 1));
+		fprintf(stream, "	cgt\n");
+	}
+
+	else if(node->data == "gte"){
+		produce_code(g_node_nth_child(node, 0));
+		produce_code(g_node_nth_child(node, 1));
+		fprintf(stream, "	clt\nldc.i4.0\nceq\n"); // litt. "not lesser than"
+	}
+
+	else if(node->data == "lt"){
+		produce_code(g_node_nth_child(node, 0));
+		produce_code(g_node_nth_child(node, 1));
+		fprintf(stream, "	clt\n");
+	}
+
+	else if(node->data == "lte"){
+		produce_code(g_node_nth_child(node, 0));
+		produce_code(g_node_nth_child(node, 1));
+		fprintf(stream, "	cgt\nldc.i4.0\nceq\n"); // litt. "not greater than"
+	}
+
+	/* If statement */
+	else if(node->data == "if"){
+		produce_code(g_node_nth_child(node, 0)); // boolean_expr 
+
+		// Mark the if symbol
+		guint endSbl = g_hash_table_size(table);
+		fprintf(stream, "	brfalse.s IF%d\n", endSbl);
+		fprintf(stream, "	nop\n");
+
+		produce_code(g_node_nth_child(node, 1)); // code 
+		produce_code(g_node_nth_child(node, 2)); // elseif
+		produce_code(g_node_nth_child(node, 3)); // else 
+		produce_code(g_node_nth_child(node, 4)); // endif
+
+		fprintf(stream, "	nop\n");
+		fprintf(stream, "	IF%d:", endSbl);
+	}
+
+	/*ElseIf statement*/
+	else if(node->data == "elseif"){
+		produce_code(g_node_nth_child(node, 0)); // elseif     
+		produce_code(g_node_nth_child(node, 1)); // boolean_expr
+
+		// Mark the if symbol
+		guint endSbl = g_hash_table_size(table);
+		fprintf(stream, "	brfalse.s ELSEIF%d\n", endSbl);
+		fprintf(stream, "	nop\n");
+
+		produce_code(g_node_nth_child(node, 2)); // code
+
+		fprintf(stream, "	nop\n");
+		fprintf(stream, "	ELSEIF%d: ", endSbl);
+
+		produce_code(g_node_nth_child(node, 3)); // elseif
+	}
+
+	/* Else */
+	else if(node->data == "else"){
+		
+		// Mark the if symbol
+		guint endSbl = g_hash_table_size(table);
+		fprintf(stream, "	brfalse.s ELSE%d\n", endSbl);
+		fprintf(stream, "	nop\n");
+
+		produce_code(g_node_nth_child(node, 0)); // code
+		
+		fprintf(stream, "	nop\n");
+		fprintf(stream, "	ELSEIF%d: ", endSbl);
+	}
+
 }
 
 void end_code()

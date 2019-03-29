@@ -1,0 +1,7 @@
+read a;
+b:= 25;
+c := a + b;
+d := 0;
+if a < b then 
+    print (d + 1);
+endif
