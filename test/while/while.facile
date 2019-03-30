@@ -1,0 +1,7 @@
+read a;
+d := 0;
+while (a > 0) do
+    d := d + 1;
+    a := a - 1;
+    print d;
+endwhile;

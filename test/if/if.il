@@ -28,7 +28,7 @@
 
 	IF_13:	ldloc	0
 	ldloc	1
-	cgt
+	ceq
 	brfalse.s ELSEIF_23
 
 	nop

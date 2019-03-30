@@ -10,7 +10,7 @@
 %%
 
 %{
-	/* Exercice 1: Instruction if */ 
+/* Exercice 1: if elseif else */ 
 %}
 if	return TOK_IF;
 then return TOK_THEN;
@@ -29,6 +29,23 @@ true return TOK_BOOL_TRUE;
 ">" return TOK_BOOL_GT;
 "<=" return TOK_BOOL_LTE;
 "<" return TOK_BOOL_LT; 
+
+%{
+/* Exercice 2: While */ 
+%}
+while return TOK_WHILE;
+do return TOK_DO;
+endwhile return TOK_ENDWHILE;
+".." return TOK_ARR_TO;
+continue return TOK_CONTINUE;
+break return TOK_BREAK;
+
+%{
+/* Exercice 3: Foreach */ 
+%}
+foreach return TOK_FOREACH;
+in return TOK_IN;
+endforeach return TOK_ENDFOREACH;
 
 0|[1-9][0-9]* {
 	sscanf(yytext, "%lu", &yylval.number);
