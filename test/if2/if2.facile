@@ -1,10 +1,12 @@
 read a;
 b:= 25;
 d := 0;
-if (a < b) then 
+if a < b then 
     print (d + 1);
-elseif a > b then
+elseif a < b+2 then
     print (d + 2);
+elseif a < b+10 then
+    print (d + 4);
 else
     print (d + 3);
 endif

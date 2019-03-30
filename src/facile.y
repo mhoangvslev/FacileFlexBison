@@ -12,6 +12,9 @@ int yyerror(char *msg);
 
 GHashTable *table;
 
+// Useful for branching
+unsigned int offset = 0;
+
 FILE *stream;
 char *module_name;
 unsigned int max_stack = 10;
@@ -40,8 +43,8 @@ extern void produce_code(GNode * node);
 %token TOK_THEN;
 %token TOK_ELSEIF;
 %token TOK_ELSE;
-%token TOK_END;
-%token TOK_ENDIF;
+%token<string> TOK_END;
+%token<string> TOK_ENDIF;
 
 %token TOK_BOOL_OR;
 %token TOK_BOOL_AND;
@@ -52,6 +55,14 @@ extern void produce_code(GNode * node);
 %token TOK_BOOL_LTE;
 %token TOK_BOOL_LT; 
 %token TOK_BOOL_NOT;
+%token TOK_BOOL_TRUE;
+%token TOK_BOOL_FALSE;
+
+/* Operator precedence */
+%left TOK_BOOL_OR;
+%left TOK_BOOL_AND;
+%left TOK_BOOL_NOT;
+%left TOK_BOOL_EQ TOK_BOOL_GT TOK_BOOL_GTE TOK_BOOL_LT TOK_BOOL_LTE TOK_BOOL_NEQ;
 
 %type<node> code
 %type<node> expr
@@ -182,11 +193,20 @@ expr:
 ;
 
 boolean_expr:
-	boolean_expr TOK_BOOL_AND boolean_expr
+	TOK_OPEN_PARENTHESIS boolean_expr TOK_CLOSE_PARENTHESIS
 	{
-		$$ = g_node_new("and");
-		g_node_append($$, $1);
-		g_node_append($$, $3);
+		$$ = g_node_new("boolexpr");
+		g_node_append($$, $2);
+	}
+|
+	TOK_BOOL_TRUE
+	{
+		$$ = g_node_new("boolTrue");
+	}
+|
+	TOK_BOOL_FALSE
+	{
+		$$ = g_node_new("boolFalse");
 	}
 |
 	expr TOK_BOOL_EQ expr
@@ -243,6 +263,13 @@ boolean_expr:
 		$$ = g_node_new("not");
 		g_node_append($$, $2);
 	}
+|
+	boolean_expr TOK_BOOL_AND boolean_expr
+	{
+		$$ = g_node_new("and");
+		g_node_append($$, $1);
+		g_node_append($$, $3);
+	}
 ;
 
 if-statement: 
@@ -257,7 +284,17 @@ if-statement:
 	}
 ;
 
-endif: TOK_END | TOK_ENDIF;
+endif: 
+	TOK_END
+	{
+		$$ = g_node_new("endif");
+	}
+| 
+	TOK_ENDIF
+	{
+		$$ = g_node_new("endif");
+	}
+;
 
 elseif: 
 	elseif TOK_ELSEIF boolean_expr TOK_THEN code elseif
@@ -279,6 +316,11 @@ else:
 	{
 		$$ = g_node_new("else");
 		g_node_append($$, $2);
+	}
+|
+	%empty
+	{
+		$$ = g_node_new("");
 	}
 ;
 
@@ -311,11 +353,11 @@ void begin_code()
 		}
 		fprintf(stream, "int32");
 	}
-	fprintf(stream, ")\n");
+	fprintf(stream, ")\n\n");
 }
 
 void produce_code(GNode * node)
-{
+{	
 	if (node->data == "code") {
 		produce_code(g_node_nth_child(node, 0));
 		produce_code(g_node_nth_child(node, 1));
@@ -352,6 +394,18 @@ void produce_code(GNode * node)
 	} 
 
 	/* Handle boolean_expr */
+	else if (node->data == "boolexpr"){
+		produce_code(g_node_nth_child(node, 0));
+	}
+
+	else if (node->data == "boolTrue"){
+		fprintf(stream, " ldc.i4.1\n");
+	}
+
+	else if (node->data == "boolFalse"){
+		fprintf(stream, " ldc.i4.0\n");
+	}
+
 	else if(node->data == "and"){
 		produce_code(g_node_nth_child(node, 0));
 		produce_code(g_node_nth_child(node, 1));
@@ -409,18 +463,21 @@ void produce_code(GNode * node)
 	else if(node->data == "if"){
 		produce_code(g_node_nth_child(node, 0)); // boolean_expr 
 
-		// Mark the if symbol
-		guint endSbl = g_hash_table_size(table);
-		fprintf(stream, "	brfalse.s IF%d\n", endSbl);
+		// Mark the jump address
+		guint endSbl = offset;
+		fprintf(stream, "	brfalse.s IF_%d\n\n", endSbl);
+		
+		fprintf(stream, "	nop\n");
+		produce_code(g_node_nth_child(node, 1)); // code wrapped with nop for catching
 		fprintf(stream, "	nop\n");
 
-		produce_code(g_node_nth_child(node, 1)); // code 
+		fprintf(stream, "	nop\n");
+		fprintf(stream, "	br.s IL_LAST\n\n"); // jump to last if not valid
+		fprintf(stream, "	IF_%d:", endSbl); // end of code, mark jump point
+
 		produce_code(g_node_nth_child(node, 2)); // elseif
 		produce_code(g_node_nth_child(node, 3)); // else 
 		produce_code(g_node_nth_child(node, 4)); // endif
-
-		fprintf(stream, "	nop\n");
-		fprintf(stream, "	IF%d:", endSbl);
 	}
 
 	/*ElseIf statement*/
@@ -428,38 +485,34 @@ void produce_code(GNode * node)
 		produce_code(g_node_nth_child(node, 0)); // elseif     
 		produce_code(g_node_nth_child(node, 1)); // boolean_expr
 
-		// Mark the if symbol
-		guint endSbl = g_hash_table_size(table);
-		fprintf(stream, "	brfalse.s ELSEIF%d\n", endSbl);
+		// Mark the jump address
+		guint endSbl = offset;
+		fprintf(stream, "	brfalse.s ELSEIF_%d\n\n", endSbl);
+		
 		fprintf(stream, "	nop\n");
-
 		produce_code(g_node_nth_child(node, 2)); // code
+		fprintf(stream, "	nop\n");
 
 		fprintf(stream, "	nop\n");
-		fprintf(stream, "	ELSEIF%d: ", endSbl);
+		fprintf(stream, "	br.s IL_LAST\n\n");
+		fprintf(stream, "	ELSEIF_%d: ", endSbl); // end of code, mark jump point
 
 		produce_code(g_node_nth_child(node, 3)); // elseif
 	}
 
 	/* Else */
 	else if(node->data == "else"){
-		
-		// Mark the if symbol
-		guint endSbl = g_hash_table_size(table);
-		fprintf(stream, "	brfalse.s ELSE%d\n", endSbl);
 		fprintf(stream, "	nop\n");
-
 		produce_code(g_node_nth_child(node, 0)); // code
-		
 		fprintf(stream, "	nop\n");
-		fprintf(stream, "	ELSEIF%d: ", endSbl);
-	}
+	}	
 
+	offset++;
 }
 
 void end_code()
 {
-	fprintf(stream, "	ret\n}\n");
+	fprintf(stream, "	IL_LAST: ret\n}\n");
 }
 
 int main(int argc, char *argv[])

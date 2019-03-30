@@ -1,7 +1,7 @@
 read a;
 b:= 25;
 d := 0;
-if (a < b) then 
+if (true) then 
     print (d + 1);
 elseif a > b then
     print (d + 2);
