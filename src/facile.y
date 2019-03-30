@@ -7,6 +7,8 @@
 
 #include <glib.h>
 
+#define YYERROR_VERBOSE 1
+
 int yylex();
 int yyerror(char *msg);
 
@@ -99,7 +101,7 @@ extern void produce_code(GNode * node);
 
 %type<node> foreach-stmt
 %type<node> endforeach
-%type<node> loop-interupter
+%type<node> loop-interuptor
 
 %union {
 	gulong number;
@@ -131,7 +133,7 @@ code:
 	}
 ;
 
-instruction: affectation | print | read | if-stmt | while-stmt | foreach-stmt;
+instruction: affectation | print | read | if-stmt | while-stmt | foreach-stmt | loop-interuptor;
 
 ident:
 	TOK_IDENT
@@ -346,7 +348,7 @@ else:
 	}
 ;
 
-loop-interupter:
+loop-interuptor:
 	TOK_CONTINUE TOK_SEMICOLON
 	{
 		$$ = g_node_new("skipItr");
@@ -356,21 +358,15 @@ loop-interupter:
 	{
 		$$ = g_node_new("breakLoop");
 	}
-|
-	%empty
-	{
-		$$ = g_node_new("");
-	}
 ;
 
 while-stmt:
-	TOK_WHILE boolean_expr TOK_DO code loop-interupter endwhile
+	TOK_WHILE boolean_expr TOK_DO code endwhile
 	{
 		$$ = g_node_new("while");
 		g_node_append($$, $2);
 		g_node_append($$, $4);
 		g_node_append($$, $5);
-		g_node_append($$, $6);
 	}
 ;
 
@@ -387,14 +383,13 @@ endwhile:
 ;
 
 foreach-stmt:
-	TOK_FOREACH ident TOK_IN expr TOK_ARR_TO expr TOK_DO code loop-interupter endforeach
+	TOK_FOREACH ident TOK_IN expr TOK_ARR_TO expr TOK_DO code endforeach
 	{
 		$$ = g_node_new("foreach");
 		g_node_append($$, $4);
 		g_node_append($$, $6);
 		g_node_append($$, $8);
 		g_node_append($$, $9);
-		g_node_append($$, $10);
 	}
 ;
 
@@ -558,7 +553,6 @@ void produce_code(GNode * node)
 		fprintf(stream, "	nop\n");
 
 		fprintf(stream, "	nop\n");
-		fprintf(stream, "	br.s IL_LAST\n\n"); // jump to last if not valid
 		fprintf(stream, "	IF_%d:", endSbl); // end of code, mark jump point
 
 		produce_code(g_node_nth_child(node, 2)); // elseif
@@ -593,7 +587,7 @@ void produce_code(GNode * node)
 		fprintf(stream, "	nop\n");
 	}
 
-	/* Loop interupter  */
+	/* Loop interuptor  */
 	else if(node->data == "skipItr"){
 		guint endSbl = offset;
 		fprintf(stream, "	LOOP_START_%d", endSbl);
@@ -617,14 +611,11 @@ void produce_code(GNode * node)
 		produce_code(g_node_nth_child(node, 1)); // code
 		fprintf(stream, "	nop\n");
 
-		// Interupter
-		produce_code(g_node_nth_child(node, 2)); // loop-interuptor;
-
 		fprintf(stream, "	LOOP_%d: ", endSbl); // Mark head
 		produce_code(g_node_nth_child(node, 0)); // boolean_expr
 		fprintf(stream, "	brtrue.s LOOP_START_%d\n", endSbl); // jump to beginning of loop if cond
 
-		produce_code(g_node_nth_child(node, 3)); // endwhile
+		produce_code(g_node_nth_child(node, 2)); // endwhile
 		fprintf(stream, "	// End loop\n");
 		fprintf(stream, "	LOOP_END_%d: nop\n", endSbl);
 	}
@@ -648,9 +639,6 @@ void produce_code(GNode * node)
 		produce_code(g_node_nth_child(node, 2)); // code
 		fprintf(stream, "	nop\n");
 
-		// Interupter
-		produce_code(g_node_nth_child(node, 3)); // loop-interuptor;
-
 		// Increment counter
 		fprintf(stream, "	nop\n");
 		fprintf(stream, "	ldloc.0\n");
@@ -669,7 +657,7 @@ void produce_code(GNode * node)
 
 		fprintf(stream, "	brtrue.s LOOP_START_%d\n", endSbl); // jump to beginning of loop if cond
 
-		produce_code(g_node_nth_child(node, 4)); // endforeach
+		produce_code(g_node_nth_child(node, 3)); // endforeach
 		fprintf(stream, "	// End loop\n");
 		fprintf(stream, "	LOOP_END_%d: nop\n", endSbl);
 	}

@@ -1,0 +1,10 @@
+foreach a in 1 .. 10 do
+    if a = 5 then
+        continue;
+    endif
+
+    if a = 8 then
+        break;
+    endif
+    print a;
+endforeach

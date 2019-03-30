@@ -24,8 +24,6 @@
 	call void class [mscorlib]System.Console::WriteLine(int32)
 	nop
 	nop
-	br.s IL_LAST
-
 	IF_13:	ldloc	0
 	ldloc	1
 	ceq

@@ -1,4 +1,4 @@
-.assembly foreach {}
+.assembly loop {}
 .method public static void Main() cil managed
 {
 	.entrypoint
@@ -12,6 +12,22 @@
 	// Start loop (head: LOOP_2)
 	LOOP_START_2: nop
 	ldloc	0
+	ldc.i4	5
+	ceq
+	brfalse.s IF_6
+
+	nop
+	LOOP_START_7	nop
+	nop
+	IF_6:	ldloc	0
+	ldc.i4	8
+	ceq
+	brfalse.s IF_17
+
+	nop
+	LOOP_END_18	nop
+	nop
+	IF_17:	ldloc	0
 	call void class [mscorlib]System.Console::WriteLine(int32)
 	nop
 	nop
