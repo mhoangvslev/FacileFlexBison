@@ -14,10 +14,12 @@
 %}
 if	return TOK_IF;
 then return TOK_THEN;
-elseif return TOK_ELSEIF;
-else return TOK_ELSE;
 end return TOK_END;
 endif return TOK_ENDIF;
+
+elseif return TOK_ELSEIF;
+else return TOK_ELSE;
+
 or return TOK_BOOL_OR;
 and return TOK_BOOL_AND;
 not return TOK_BOOL_NOT;

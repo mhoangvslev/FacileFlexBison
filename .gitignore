@@ -1,2 +1,12 @@
 .vscode/
 build/
+
+dist/
+
+\.ipynb_checkpoints/
+
+*.il
+
+*.exe
+
+src/ccalc/

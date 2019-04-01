@@ -1,15 +1,15 @@
 # Utilisation build.sh path/to/facile name
 
-echo "Rebuilding..."
+echo "\nRebuilding..."
 rm -rf ./build ./dist
 mkdir build
 mkdir dist
 
-echo "Compiling..."
+echo "\nCompiling..."
 cd build/
 cmake ../src
 make 
 
-echo "Moving executable to dist..."
+echo "\nMoving executable to dist..."
 cd ../
 mv build/facile dist/
