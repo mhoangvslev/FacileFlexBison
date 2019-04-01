@@ -302,7 +302,7 @@ boolean_expr:
 ;
 
 if-stmt: 
-	TOK_IF boolean_expr TOK_THEN code elseif else endif
+	TOK_IF boolean_expr chk_then code elseif else endif
 	{
 		$$ = g_node_new("if");
 		g_node_append($$, $2);
@@ -326,7 +326,7 @@ endif:
 ;
 
 elseif: 
-	elseif TOK_ELSEIF boolean_expr TOK_THEN code elseif
+	elseif TOK_ELSEIF boolean_expr chk_then code elseif
 	{
 		$$ = g_node_new("elseif");
 		g_node_append($$, $1);
@@ -366,7 +366,7 @@ loop-interuptor:
 ;
 
 while-stmt:
-	TOK_WHILE boolean_expr TOK_DO code endwhile
+	chk_while boolean_expr chk_do code endwhile
 	{
 		$$ = g_node_new("while");
 		g_node_append($$, $2);
@@ -388,7 +388,7 @@ endwhile:
 ;
 
 foreach-stmt:
-	TOK_FOREACH ident TOK_IN expr TOK_ARR_TO expr TOK_DO code endforeach
+	chk_foreach ident chk_in expr chk_to expr chk_do code endforeach
 	{
 		$$ = g_node_new("foreach");
 		g_node_append($$, $4);
@@ -409,6 +409,32 @@ endforeach:
 		$$ = g_node_new("endforeach");
 	}
 ;
+
+
+chk_then:
+	TOK_THEN | { yyerror("Missing token <then>"); YYABORT; }   error
+;
+
+chk_while:
+	TOK_WHILE | { yyerror("Missing token <while>"); YYABORT; }   error
+;
+
+chk_in:
+	TOK_IN | { yyerror("Missing token <in>"); YYABORT; }   error
+;
+
+chk_to:
+	TOK_ARR_TO | { yyerror("Missing token <..>"); YYABORT; }   error
+;
+
+chk_do:
+	TOK_DO | { yyerror("Missing token <do>"); YYABORT; }   error
+;
+
+chk_foreach:
+	TOK_FOREACH | { yyerror("Missing token <foreach>"); YYABORT; }   error
+;
+
 
 %%
 
@@ -722,6 +748,8 @@ int main(int argc, char *argv[])
 			}
 			onechar++;
 		}
+
+		/* Open the file and parse */
 		if (stdin = fopen(file_name_input, "r")) {
 			if (stream = fopen(basename, "w")) {
 				table = g_hash_table_new_full(g_str_hash, g_str_equal, free, NULL);
