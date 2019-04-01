@@ -366,7 +366,7 @@ loop-interuptor:
 ;
 
 while-stmt:
-	chk_while boolean_expr chk_do code endwhile
+	TOK_WHILE boolean_expr chk_do code endwhile
 	{
 		$$ = g_node_new("while");
 		g_node_append($$, $2);
@@ -388,7 +388,7 @@ endwhile:
 ;
 
 foreach-stmt:
-	chk_foreach ident chk_in expr chk_to expr chk_do code endforeach
+	TOK_FOREACH ident chk_in expr chk_to expr chk_do code endforeach
 	{
 		$$ = g_node_new("foreach");
 		g_node_append($$, $4);
@@ -415,10 +415,6 @@ chk_then:
 	TOK_THEN | { yyerror("Missing token <then>"); YYABORT; }   error
 ;
 
-chk_while:
-	TOK_WHILE | { yyerror("Missing token <while>"); YYABORT; }   error
-;
-
 chk_in:
 	TOK_IN | { yyerror("Missing token <in>"); YYABORT; }   error
 ;
@@ -430,11 +426,6 @@ chk_to:
 chk_do:
 	TOK_DO | { yyerror("Missing token <do>"); YYABORT; }   error
 ;
-
-chk_foreach:
-	TOK_FOREACH | { yyerror("Missing token <foreach>"); YYABORT; }   error
-;
-
 
 %%
 
