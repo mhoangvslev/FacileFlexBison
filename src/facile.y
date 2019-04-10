@@ -15,7 +15,8 @@ int yyerror(const char* msg);
 GHashTable *table;
 
 // Offset - Useful for branching
-unsigned int offset = -1; // +1 everytime
+unsigned int if_offset = -1; // +1 everytime
+unsigned int elseif_offset = -1; // +1 everytime
 unsigned int loop_offset = -1; // +1 when loop
 
 FILE *stream;
@@ -460,8 +461,6 @@ void begin_code()
 
 void produce_code(GNode * node)
 {	
-	offset++;
-
 	if (node->data == "code") {
 		produce_code(g_node_nth_child(node, 0));
 		produce_code(g_node_nth_child(node, 1));
@@ -565,40 +564,50 @@ void produce_code(GNode * node)
 
 	/* If statement */
 	else if(node->data == "if"){
+		if_offset++;
+
 		produce_code(g_node_nth_child(node, 0)); // boolean_expr 
 
 		// Mark the jump address
-		guint endSbl = offset;
-		fprintf(stream, "	brfalse.s IF_%d\n\n", endSbl);
+		guint endSbl = if_offset;
+		fprintf(stream, "	brfalse IF_%d\n\n", endSbl);
 		
 		fprintf(stream, "	nop\n");
 		produce_code(g_node_nth_child(node, 1)); // code wrapped with nop for catching
 		fprintf(stream, "	nop\n");
 
 		fprintf(stream, "	nop\n");
-		fprintf(stream, "	IF_%d:", endSbl); // end of code, mark jump point
+		fprintf(stream, "	br IF_END_%d\n\n", endSbl);
+		
+		fprintf(stream, "	IF_%d: nop\n", endSbl); // end of code, mark jump point
 
 		produce_code(g_node_nth_child(node, 2)); // elseif
 		produce_code(g_node_nth_child(node, 3)); // else 
 		produce_code(g_node_nth_child(node, 4)); // endif
+
+		fprintf(stream, "	IF_END_%d: nop\n", endSbl);
 	}
 
 	/*ElseIf statement*/
 	else if(node->data == "elseif"){
+		elseif_offset++;
+
 		produce_code(g_node_nth_child(node, 0)); // boolean_expr
 
 		// Mark the jump address
-		guint endSbl = offset;
-		fprintf(stream, "	brfalse.s ELSEIF_%d\n\n", endSbl);
+		guint endSbl = elseif_offset;
+		guint ifSbl = if_offset;
+
+		fprintf(stream, "	brfalse ELSEIF_%d\n\n", endSbl);
 		
 		fprintf(stream, "	nop\n");
 		produce_code(g_node_nth_child(node, 1)); // code
 		fprintf(stream, "	nop\n");
 
 		fprintf(stream, "	nop\n");
-		fprintf(stream, "	br.s IL_LAST\n\n");
-		fprintf(stream, "	ELSEIF_%d: ", endSbl); // end of code, mark jump point
+		fprintf(stream, "	br IF_END_%d\n\n", ifSbl);
 
+		fprintf(stream, "	ELSEIF_%d: nop\n", endSbl); // end of code, mark jump point
 		produce_code(g_node_nth_child(node, 2)); // elseif
 	}
 
@@ -612,12 +621,12 @@ void produce_code(GNode * node)
 	/* Loop interuptor  */
 	else if(node->data == "skipItr"){
 		guint endSbl = loop_offset;
-		fprintf(stream, "	br.s LOOP_INCR_%d\n\n", endSbl);
+		fprintf(stream, "	br LOOP_INCR_%d\n\n", endSbl);
 	}
 
 	else if(node->data == "breakLoop"){
 		guint endSbl = loop_offset;
-		fprintf(stream, "	br.s LOOP_END_%d\n\n", endSbl);
+		fprintf(stream, "	br LOOP_END_%d\n\n", endSbl);
 	}
 
 	/* While */	
@@ -626,7 +635,7 @@ void produce_code(GNode * node)
 
 		// Branch out
 		guint endSbl = loop_offset;
-		fprintf(stream, "	br.s LOOP_HEAD_%d\n", endSbl); // Init first iteration by jumping to head
+		fprintf(stream, "	br LOOP_HEAD_%d\n", endSbl); // Init first iteration by jumping to head
 		fprintf(stream, "	// Start loop (head: LOOP_HEAD_%d)\n", endSbl);
 		fprintf(stream, "	LOOP_START_%d: nop\n", endSbl); // Mark beginning
 
@@ -639,7 +648,7 @@ void produce_code(GNode * node)
 
 		fprintf(stream, "	LOOP_HEAD_%d: ", endSbl); // Mark head
 		produce_code(g_node_nth_child(node, 0)); // boolean_expr
-		fprintf(stream, "	brtrue.s LOOP_START_%d\n", endSbl); // jump to beginning of loop if cond
+		fprintf(stream, "	brtrue LOOP_START_%d\n", endSbl); // jump to beginning of loop if cond
 
 		produce_code(g_node_nth_child(node, 2)); // endwhile
 		fprintf(stream, "	// End loop\n");
@@ -655,10 +664,10 @@ void produce_code(GNode * node)
 		// Initialise counter variable
 		fprintf(stream, "	nop\n");
 		produce_code(g_node_nth_child(node, 0)); // expr
-		fprintf(stream, "	stloc.s %d\n", endSbl);
+		fprintf(stream, "	stloc %d\n", endSbl);
 
 		// Branch off - while like
-		fprintf(stream, "	br.s LOOP_HEAD_%d\n", endSbl); // Jump to head
+		fprintf(stream, "	br LOOP_HEAD_%d\n", endSbl); // Jump to head
 		fprintf(stream, "	// Start loop (head: LOOP_HEAD_%d)\n", endSbl);
 
 		fprintf(stream, "	LOOP_START_%d: nop\n", endSbl); // Mark beginning
@@ -670,13 +679,13 @@ void produce_code(GNode * node)
 		// Increment counter
 		fprintf(stream, "	LOOP_INCR_%d: ", endSbl); 
 		fprintf(stream, "	nop\n");
-		fprintf(stream, "	ldloc.s %d\n", endSbl);
+		fprintf(stream, "	ldloc %d\n", endSbl);
 		fprintf(stream, "	ldc.i4.1\n");
 		fprintf(stream, "	add\n");
-		fprintf(stream, "	stloc.s %d\n\n", endSbl); // Unload counter
+		fprintf(stream, "	stloc %d\n\n", endSbl); // Unload counter
 
 		fprintf(stream, "	LOOP_HEAD_%d: ", endSbl); // Mark head
-		fprintf(stream, "	ldloc.s %d\n", endSbl); // Reload counter
+		fprintf(stream, "	ldloc %d\n", endSbl); // Reload counter
 		produce_code(g_node_nth_child(node, 1)); // expr
 		
 		// Check condition
@@ -684,7 +693,7 @@ void produce_code(GNode * node)
 		fprintf(stream, "	ldc.i4.0\n");
 		fprintf(stream, "	ceq\n");
 
-		fprintf(stream, "	brtrue.s LOOP_START_%d\n", endSbl); // jump to beginning of loop if cond
+		fprintf(stream, "	brtrue LOOP_START_%d\n", endSbl); // jump to beginning of loop if cond
 
 		produce_code(g_node_nth_child(node, 3)); // endforeach
 		fprintf(stream, "	// End loop\n");

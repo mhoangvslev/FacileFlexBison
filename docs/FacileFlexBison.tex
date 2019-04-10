@@ -150,7 +150,7 @@
     % Document parameters
     % Document title
     \title{FacileFlexBison}
-    
+    \author{Minh-Hoang DANG}
     
     
     
@@ -569,8 +569,9 @@ JUMP_POINT_0: <codeCIL>
         \PY{n}{GHashTable} \PY{o}{*}\PY{n}{table}\PY{p}{;}
         
         \PY{c+c1}{// Offset \PYZhy{} Useful for branching}
-        \PY{k+kt}{unsigned} \PY{k+kt}{int} \PY{n}{offset} \PY{o}{=} \PY{l+m+mi}{0}\PY{p}{;} \PY{c+c1}{// +1 everytime}
-        \PY{k+kt}{unsigned} \PY{k+kt}{int} \PY{n}{loop\PYZus{}offset} \PY{o}{=} \PY{l+m+mi}{0}\PY{p}{;} \PY{c+c1}{// +1 when loop}
+        \PY{k+kt}{unsigned} \PY{k+kt}{int} \PY{n}{if\PYZus{}offset} \PY{o}{=} \PY{o}{\PYZhy{}}\PY{l+m+mi}{1}\PY{p}{;} \PY{c+c1}{// +1 everytime}
+        \PY{k+kt}{unsigned} \PY{k+kt}{int} \PY{n}{elseif\PYZus{}offset} \PY{o}{=} \PY{o}{\PYZhy{}}\PY{l+m+mi}{1}\PY{p}{;} \PY{c+c1}{// +1 everytime}
+        \PY{k+kt}{unsigned} \PY{k+kt}{int} \PY{n}{loop\PYZus{}offset} \PY{o}{=} \PY{o}{\PYZhy{}}\PY{l+m+mi}{1}\PY{p}{;} \PY{c+c1}{// +1 when loop}
         
         \PY{k+kt}{FILE} \PY{o}{*}\PY{n}{stream}\PY{p}{;}
         \PY{k+kt}{char} \PY{o}{*}\PY{n}{module\PYZus{}name}\PY{p}{;}
@@ -584,22 +585,28 @@ JUMP_POINT_0: <codeCIL>
    \begin{Verbatim}[commandchars=\\\{\},fontsize=\scriptsize]
 {\color{incolor}In [{\color{incolor} }]:} \PY{c+cm}{/* If statement */}
         \PY{k}{else} \PY{n+nf}{if}\PY{p}{(}\PY{n}{node}\PY{o}{\PYZhy{}}\PY{o}{\PYZgt{}}\PY{n}{data} \PY{o}{=}\PY{o}{=} \PY{l+s}{\PYZdq{}}\PY{l+s}{if}\PY{l+s}{\PYZdq{}}\PY{p}{)}\PY{p}{\PYZob{}}
+            \PY{n}{if\PYZus{}offset}\PY{o}{+}\PY{o}{+}\PY{p}{;}
+        
             \PY{n}{produce\PYZus{}code}\PY{p}{(}\PY{n}{g\PYZus{}node\PYZus{}nth\PYZus{}child}\PY{p}{(}\PY{n}{node}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{)}\PY{p}{)}\PY{p}{;} \PY{c+c1}{// boolean\PYZus{}expr}
         
             \PY{c+c1}{// Mark the jump address}
-            \PY{n}{guint} \PY{n}{endSbl} \PY{o}{=} \PY{n}{offset}\PY{p}{;}
-            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   brfalse.s IF\PYZus{}\PYZpc{}d}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{,} \PY{n}{endSbl}\PY{p}{)}\PY{p}{;}
+            \PY{n}{guint} \PY{n}{endSbl} \PY{o}{=} \PY{n}{if\PYZus{}offset}\PY{p}{;}
+            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{    brfalse IF\PYZus{}\PYZpc{}d}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{,} \PY{n}{endSbl}\PY{p}{)}\PY{p}{;}
         
-            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   nop}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{)}\PY{p}{;}
+            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{    nop}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{)}\PY{p}{;}
             \PY{n}{produce\PYZus{}code}\PY{p}{(}\PY{n}{g\PYZus{}node\PYZus{}nth\PYZus{}child}\PY{p}{(}\PY{n}{node}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{)}\PY{p}{)}\PY{p}{;} \PY{c+c1}{// code wrapped with nop for catching}
-            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   nop}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{)}\PY{p}{;}
+            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{    nop}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{)}\PY{p}{;}
         
-            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   nop}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{)}\PY{p}{;}
-            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   IF\PYZus{}\PYZpc{}d:}\PY{l+s}{\PYZdq{}}\PY{p}{,} \PY{n}{endSbl}\PY{p}{)}\PY{p}{;} \PY{c+c1}{// end of code, mark jump point}
+            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{    nop}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{)}\PY{p}{;}
+            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{    br IF\PYZus{}END\PYZus{}\PYZpc{}d}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{,} \PY{n}{endSbl}\PY{p}{)}\PY{p}{;}
+        
+            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{    IF\PYZus{}\PYZpc{}d: nop}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{,} \PY{n}{endSbl}\PY{p}{)}\PY{p}{;} \PY{c+c1}{// end of code, mark jump point}
         
             \PY{n}{produce\PYZus{}code}\PY{p}{(}\PY{n}{g\PYZus{}node\PYZus{}nth\PYZus{}child}\PY{p}{(}\PY{n}{node}\PY{p}{,} \PY{l+m+mi}{2}\PY{p}{)}\PY{p}{)}\PY{p}{;} \PY{c+c1}{// elseif}
             \PY{n}{produce\PYZus{}code}\PY{p}{(}\PY{n}{g\PYZus{}node\PYZus{}nth\PYZus{}child}\PY{p}{(}\PY{n}{node}\PY{p}{,} \PY{l+m+mi}{3}\PY{p}{)}\PY{p}{)}\PY{p}{;} \PY{c+c1}{// else}
             \PY{n}{produce\PYZus{}code}\PY{p}{(}\PY{n}{g\PYZus{}node\PYZus{}nth\PYZus{}child}\PY{p}{(}\PY{n}{node}\PY{p}{,} \PY{l+m+mi}{4}\PY{p}{)}\PY{p}{)}\PY{p}{;} \PY{c+c1}{// endif}
+        
+            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{    IF\PYZus{}END\PYZus{}\PYZpc{}d: nop}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{,} \PY{n}{endSbl}\PY{p}{)}\PY{p}{;}
         \PY{p}{\PYZcb{}}
 \end{Verbatim}
 
@@ -608,29 +615,25 @@ JUMP_POINT_0: <codeCIL>
    \begin{Verbatim}[commandchars=\\\{\},fontsize=\scriptsize]
 {\color{incolor}In [{\color{incolor} }]:} \PY{c+cm}{/*ElseIf statement*/}
         \PY{k}{else} \PY{n+nf}{if}\PY{p}{(}\PY{n}{node}\PY{o}{\PYZhy{}}\PY{o}{\PYZgt{}}\PY{n}{data} \PY{o}{=}\PY{o}{=} \PY{l+s}{\PYZdq{}}\PY{l+s}{elseif}\PY{l+s}{\PYZdq{}}\PY{p}{)}\PY{p}{\PYZob{}}
-            \PY{n}{produce\PYZus{}code}\PY{p}{(}\PY{n}{g\PYZus{}node\PYZus{}nth\PYZus{}child}\PY{p}{(}\PY{n}{node}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{)}\PY{p}{)}\PY{p}{;} \PY{c+c1}{// elseif}
-            \PY{n}{produce\PYZus{}code}\PY{p}{(}\PY{n}{g\PYZus{}node\PYZus{}nth\PYZus{}child}\PY{p}{(}\PY{n}{node}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{)}\PY{p}{)}\PY{p}{;} \PY{c+c1}{// boolean\PYZus{}expr}
+            \PY{n}{elseif\PYZus{}offset}\PY{o}{+}\PY{o}{+}\PY{p}{;}
+        
+            \PY{n}{produce\PYZus{}code}\PY{p}{(}\PY{n}{g\PYZus{}node\PYZus{}nth\PYZus{}child}\PY{p}{(}\PY{n}{node}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{)}\PY{p}{)}\PY{p}{;} \PY{c+c1}{// boolean\PYZus{}expr}
         
             \PY{c+c1}{// Mark the jump address}
-            \PY{n}{guint} \PY{n}{endSbl} \PY{o}{=} \PY{n}{offset}\PY{p}{;}
-            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   brfalse.s ELSEIF\PYZus{}\PYZpc{}d}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{,} \PY{n}{endSbl}\PY{p}{)}\PY{p}{;}
+            \PY{n}{guint} \PY{n}{endSbl} \PY{o}{=} \PY{n}{elseif\PYZus{}offset}\PY{p}{;}
+            \PY{n}{guint} \PY{n}{ifSbl} \PY{o}{=} \PY{n}{if\PYZus{}offset}\PY{p}{;}
         
-            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   nop}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{)}\PY{p}{;}
-            \PY{n}{produce\PYZus{}code}\PY{p}{(}\PY{n}{g\PYZus{}node\PYZus{}nth\PYZus{}child}\PY{p}{(}\PY{n}{node}\PY{p}{,} \PY{l+m+mi}{2}\PY{p}{)}\PY{p}{)}\PY{p}{;} \PY{c+c1}{// code}
-            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   nop}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{)}\PY{p}{;}
+            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{    brfalse ELSEIF\PYZus{}\PYZpc{}d}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{,} \PY{n}{endSbl}\PY{p}{)}\PY{p}{;}
         
-            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   nop}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{)}\PY{p}{;}
-            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   br.s IL\PYZus{}LAST}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{)}\PY{p}{;}
-            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   ELSEIF\PYZus{}\PYZpc{}d: }\PY{l+s}{\PYZdq{}}\PY{p}{,} \PY{n}{endSbl}\PY{p}{)}\PY{p}{;} \PY{c+c1}{// end of code, mark jump point}
+            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{    nop}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{)}\PY{p}{;}
+            \PY{n}{produce\PYZus{}code}\PY{p}{(}\PY{n}{g\PYZus{}node\PYZus{}nth\PYZus{}child}\PY{p}{(}\PY{n}{node}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{)}\PY{p}{)}\PY{p}{;} \PY{c+c1}{// code}
+            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{    nop}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{)}\PY{p}{;}
         
-            \PY{n}{produce\PYZus{}code}\PY{p}{(}\PY{n}{g\PYZus{}node\PYZus{}nth\PYZus{}child}\PY{p}{(}\PY{n}{node}\PY{p}{,} \PY{l+m+mi}{3}\PY{p}{)}\PY{p}{)}\PY{p}{;} \PY{c+c1}{// elseif}
-        \PY{p}{\PYZcb{}}
+            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{    nop}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{)}\PY{p}{;}
+            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{    br IF\PYZus{}END\PYZus{}\PYZpc{}d}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{,} \PY{n}{ifSbl}\PY{p}{)}\PY{p}{;}
         
-        \PY{c+cm}{/* Else */}
-        \PY{k}{else} \PY{n+nf}{if}\PY{p}{(}\PY{n}{node}\PY{o}{\PYZhy{}}\PY{o}{\PYZgt{}}\PY{n}{data} \PY{o}{=}\PY{o}{=} \PY{l+s}{\PYZdq{}}\PY{l+s}{else}\PY{l+s}{\PYZdq{}}\PY{p}{)}\PY{p}{\PYZob{}}
-            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   nop}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{)}\PY{p}{;}
-            \PY{n}{produce\PYZus{}code}\PY{p}{(}\PY{n}{g\PYZus{}node\PYZus{}nth\PYZus{}child}\PY{p}{(}\PY{n}{node}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{)}\PY{p}{)}\PY{p}{;} \PY{c+c1}{// code}
-            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   nop}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{)}\PY{p}{;}
+            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{    ELSEIF\PYZus{}\PYZpc{}d: nop}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{,} \PY{n}{endSbl}\PY{p}{)}\PY{p}{;} \PY{c+c1}{// end of code, mark jump point}
+            \PY{n}{produce\PYZus{}code}\PY{p}{(}\PY{n}{g\PYZus{}node\PYZus{}nth\PYZus{}child}\PY{p}{(}\PY{n}{node}\PY{p}{,} \PY{l+m+mi}{2}\PY{p}{)}\PY{p}{)}\PY{p}{;} \PY{c+c1}{// elseif}
         \PY{p}{\PYZcb{}}
 \end{Verbatim}
 
@@ -779,12 +782,12 @@ contraire, \texttt{break} saute vers la fin de la boucle.
 {\color{incolor}In [{\color{incolor} }]:} \PY{c+cm}{/* Loop interuptor */}
         \PY{k}{else} \PY{n+nf}{if}\PY{p}{(}\PY{n}{node}\PY{o}{\PYZhy{}}\PY{o}{\PYZgt{}}\PY{n}{data} \PY{o}{=}\PY{o}{=} \PY{l+s}{\PYZdq{}}\PY{l+s}{skipItr}\PY{l+s}{\PYZdq{}}\PY{p}{)}\PY{p}{\PYZob{}}
             \PY{n}{guint} \PY{n}{endSbl} \PY{o}{=} \PY{n}{loop\PYZus{}offset}\PY{p}{;}
-            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   br.s LOOP\PYZus{}INCR\PYZus{}\PYZpc{}d}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{,} \PY{n}{endSbl}\PY{p}{)}\PY{p}{;}
+            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   br LOOP\PYZus{}INCR\PYZus{}\PYZpc{}d}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{,} \PY{n}{endSbl}\PY{p}{)}\PY{p}{;}
         \PY{p}{\PYZcb{}}
         
         \PY{k}{else} \PY{n+nf}{if}\PY{p}{(}\PY{n}{node}\PY{o}{\PYZhy{}}\PY{o}{\PYZgt{}}\PY{n}{data} \PY{o}{=}\PY{o}{=} \PY{l+s}{\PYZdq{}}\PY{l+s}{breakLoop}\PY{l+s}{\PYZdq{}}\PY{p}{)}\PY{p}{\PYZob{}}
             \PY{n}{guint} \PY{n}{endSbl} \PY{o}{=} \PY{n}{loop\PYZus{}offset}\PY{p}{;}
-            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   br.s LOOP\PYZus{}END\PYZus{}\PYZpc{}d}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{,} \PY{n}{endSbl}\PY{p}{)}\PY{p}{;}
+            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   br LOOP\PYZus{}END\PYZus{}\PYZpc{}d}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{,} \PY{n}{endSbl}\PY{p}{)}\PY{p}{;}
         \PY{p}{\PYZcb{}}
 \end{Verbatim}
 
@@ -796,8 +799,8 @@ contraire, \texttt{break} saute vers la fin de la boucle.
         
             \PY{c+c1}{// Branch out}
             \PY{n}{guint} \PY{n}{endSbl} \PY{o}{=} \PY{n}{loop\PYZus{}offset}\PY{p}{;}
-            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   br.s LOOP\PYZus{}HEAD\PYZus{}\PYZpc{}d}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{,} \PY{n}{endSbl}\PY{p}{)}\PY{p}{;} \PY{c+c1}{// Init first iteration by}
-        \PY{n}{jumping} \PY{n}{to} \PY{n}{head}
+            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   br LOOP\PYZus{}HEAD\PYZus{}\PYZpc{}d}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{,} \PY{n}{endSbl}\PY{p}{)}\PY{p}{;} \PY{c+c1}{// Init first iteration by jumping}
+        \PY{n}{to} \PY{n}{head}
             \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   // Start loop (head: LOOP\PYZus{}HEAD\PYZus{}\PYZpc{}d)}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{,} \PY{n}{endSbl}\PY{p}{)}\PY{p}{;}
             \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   LOOP\PYZus{}START\PYZus{}\PYZpc{}d: nop}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{,} \PY{n}{endSbl}\PY{p}{)}\PY{p}{;} \PY{c+c1}{// Mark beginning}
         
@@ -810,7 +813,7 @@ contraire, \texttt{break} saute vers la fin de la boucle.
         
             \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   LOOP\PYZus{}HEAD\PYZus{}\PYZpc{}d: }\PY{l+s}{\PYZdq{}}\PY{p}{,} \PY{n}{endSbl}\PY{p}{)}\PY{p}{;} \PY{c+c1}{// Mark head}
             \PY{n}{produce\PYZus{}code}\PY{p}{(}\PY{n}{g\PYZus{}node\PYZus{}nth\PYZus{}child}\PY{p}{(}\PY{n}{node}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{)}\PY{p}{)}\PY{p}{;} \PY{c+c1}{// boolean\PYZus{}expr}
-            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   brtrue.s LOOP\PYZus{}START\PYZus{}\PYZpc{}d}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{,} \PY{n}{endSbl}\PY{p}{)}\PY{p}{;} \PY{c+c1}{// jump to beginning of loop}
+            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   brtrue LOOP\PYZus{}START\PYZus{}\PYZpc{}d}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{,} \PY{n}{endSbl}\PY{p}{)}\PY{p}{;} \PY{c+c1}{// jump to beginning of loop}
         \PY{k}{if} \PY{n}{cond}
         
             \PY{n}{produce\PYZus{}code}\PY{p}{(}\PY{n}{g\PYZus{}node\PYZus{}nth\PYZus{}child}\PY{p}{(}\PY{n}{node}\PY{p}{,} \PY{l+m+mi}{2}\PY{p}{)}\PY{p}{)}\PY{p}{;} \PY{c+c1}{// endwhile}
@@ -829,7 +832,7 @@ contraire, \texttt{break} saute vers la fin de la boucle.
             \PY{c+c1}{// Initialise counter variable}
             \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   nop}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{)}\PY{p}{;}
             \PY{n}{produce\PYZus{}code}\PY{p}{(}\PY{n}{g\PYZus{}node\PYZus{}nth\PYZus{}child}\PY{p}{(}\PY{n}{node}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{)}\PY{p}{)}\PY{p}{;} \PY{c+c1}{// expr}
-            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   stloc.s \PYZpc{}d}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{,} \PY{n}{endSbl}\PY{p}{)}\PY{p}{;}
+            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   stloc \PYZpc{}d}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{,} \PY{n}{endSbl}\PY{p}{)}\PY{p}{;}
         
             \PY{c+c1}{// Branch off \PYZhy{} while like}
             \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   br.s LOOP\PYZus{}HEAD\PYZus{}\PYZpc{}d}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{,} \PY{n}{endSbl}\PY{p}{)}\PY{p}{;} \PY{c+c1}{// Jump to head}
@@ -844,13 +847,13 @@ contraire, \texttt{break} saute vers la fin de la boucle.
             \PY{c+c1}{// Increment counter}
             \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   LOOP\PYZus{}INCR\PYZus{}\PYZpc{}d: }\PY{l+s}{\PYZdq{}}\PY{p}{,} \PY{n}{endSbl}\PY{p}{)}\PY{p}{;}
             \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   nop}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{)}\PY{p}{;}
-            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   ldloc.s \PYZpc{}d}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{,} \PY{n}{endSbl}\PY{p}{)}\PY{p}{;}
+            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   ldloc \PYZpc{}d}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{,} \PY{n}{endSbl}\PY{p}{)}\PY{p}{;}
             \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   ldc.i4.1}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{)}\PY{p}{;}
             \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   add}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{)}\PY{p}{;}
-            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   stloc.s \PYZpc{}d}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{,} \PY{n}{endSbl}\PY{p}{)}\PY{p}{;} \PY{c+c1}{// Unload counter}
+            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   stloc \PYZpc{}d}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{,} \PY{n}{endSbl}\PY{p}{)}\PY{p}{;} \PY{c+c1}{// Unload counter}
         
             \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   LOOP\PYZus{}HEAD\PYZus{}\PYZpc{}d: }\PY{l+s}{\PYZdq{}}\PY{p}{,} \PY{n}{endSbl}\PY{p}{)}\PY{p}{;} \PY{c+c1}{// Mark head}
-            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   ldloc.s \PYZpc{}d}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{,} \PY{n}{endSbl}\PY{p}{)}\PY{p}{;} \PY{c+c1}{// Reload counter}
+            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   ldloc \PYZpc{}d}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{,} \PY{n}{endSbl}\PY{p}{)}\PY{p}{;} \PY{c+c1}{// Reload counter}
             \PY{n}{produce\PYZus{}code}\PY{p}{(}\PY{n}{g\PYZus{}node\PYZus{}nth\PYZus{}child}\PY{p}{(}\PY{n}{node}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{)}\PY{p}{)}\PY{p}{;} \PY{c+c1}{// expr}
         
             \PY{c+c1}{// Check condition}
@@ -858,7 +861,7 @@ contraire, \texttt{break} saute vers la fin de la boucle.
             \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   ldc.i4.0}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{)}\PY{p}{;}
             \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   ceq}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{)}\PY{p}{;}
         
-            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   brtrue.s LOOP\PYZus{}START\PYZus{}\PYZpc{}d}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{,} \PY{n}{endSbl}\PY{p}{)}\PY{p}{;} \PY{c+c1}{// jump to beginning of loop}
+            \PY{n}{fprintf}\PY{p}{(}\PY{n}{stream}\PY{p}{,} \PY{l+s}{\PYZdq{}}\PY{l+s}{   brtrue LOOP\PYZus{}START\PYZus{}\PYZpc{}d}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{,} \PY{n}{endSbl}\PY{p}{)}\PY{p}{;} \PY{c+c1}{// jump to beginning of loop}
         \PY{k}{if} \PY{n}{cond}
         
             \PY{n}{produce\PYZus{}code}\PY{p}{(}\PY{n}{g\PYZus{}node\PYZus{}nth\PYZus{}child}\PY{p}{(}\PY{n}{node}\PY{p}{,} \PY{l+m+mi}{3}\PY{p}{)}\PY{p}{)}\PY{p}{;} \PY{c+c1}{// endforeach}

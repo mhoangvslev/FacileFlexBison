@@ -5,9 +5,9 @@ rm -rf ./build ./dist
 mkdir build
 mkdir dist
 
-echo "\nCompiling..."
+echo "\nUse 'cmake -DCMAKE_BUILD_TYPE=Debug' for more verbose output. Compiling..."
 cd build/
-cmake -DCMAKE_BUILD_TYPE=Debug ../src
+cmake ../src
 make 
 
 echo "\nMoving executable to dist..."
