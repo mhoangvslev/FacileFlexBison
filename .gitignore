@@ -10,3 +10,11 @@ dist/
 *.exe
 
 src/ccalc/
+
+*.aux
+
+*.log
+
+*.out
+
+*.gz

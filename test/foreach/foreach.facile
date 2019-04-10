@@ -1,3 +1,5 @@
 foreach a in 1 .. 10 do
-    print a;
+    foreach b in 1 .. 10 do
+        print b;
+    endforeach
 endforeach

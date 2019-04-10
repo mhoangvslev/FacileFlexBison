@@ -1,7 +1,9 @@
-read a;
-d := 0;
-while (a > 0) do
-    d := d + 1;
-    a := a - 1;
-    print d;
-endwhile;
+a := 0;
+while (a < 10) do
+    d := 0;
+    while(d < 10) do
+        print d;
+        d := d + 1;
+    end
+    a := a + 1;
+endwhile

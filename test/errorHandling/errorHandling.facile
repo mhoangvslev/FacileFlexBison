@@ -1,4 +1,4 @@
-foreach a in 1 .. 10 do
+foreach a in 1 .. 10
     if a = 5 then
         continue;
     endif
@@ -6,5 +6,6 @@ foreach a in 1 .. 10 do
     if a = 8 then
         break;
     endif
+
     print a;
 endforeach

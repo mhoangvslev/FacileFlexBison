@@ -27,7 +27,7 @@ if(CMAKE_BUILD_TYPE STREQUAL Debug)
 		FACILE_PARSER
 		facile.y
 		"${CMAKE_CURRENT_BINARY_DIR}/facile.y.c"
-		COMPILE_FLAGS "-g"
+		COMPILE_FLAGS "-g -v"
 		VERBOSE
 	)
 else()

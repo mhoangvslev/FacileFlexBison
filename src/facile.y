@@ -10,13 +10,13 @@
 #define YYERROR_VERBOSE 1
 
 int yylex();
-int yyerror(char *msg);
+int yyerror(const char* msg);
 
 GHashTable *table;
 
 // Offset - Useful for branching
-unsigned int offset = 0; // +1 everytime
-unsigned int loop_offset = 0; // +1 when loop
+unsigned int offset = -1; // +1 everytime
+unsigned int loop_offset = -1; // +1 when loop
 
 FILE *stream;
 char *module_name;
@@ -326,13 +326,12 @@ endif:
 ;
 
 elseif: 
-	elseif TOK_ELSEIF boolean_expr chk_then code elseif
+	TOK_ELSEIF boolean_expr chk_then code elseif
 	{
 		$$ = g_node_new("elseif");
-		g_node_append($$, $1);
-		g_node_append($$, $3);
+		g_node_append($$, $2);
+		g_node_append($$, $4);
 		g_node_append($$, $5);
-		g_node_append($$, $6);
 	}
 |
 	%empty
@@ -431,7 +430,7 @@ chk_do:
 
 #include <stdlib.h>
 
-int yyerror(char *msg)
+int yyerror(const char* msg)
 {
 	fprintf(stderr, "%s\n", msg);
 }
@@ -461,6 +460,8 @@ void begin_code()
 
 void produce_code(GNode * node)
 {	
+	offset++;
+
 	if (node->data == "code") {
 		produce_code(g_node_nth_child(node, 0));
 		produce_code(g_node_nth_child(node, 1));
@@ -584,22 +585,21 @@ void produce_code(GNode * node)
 
 	/*ElseIf statement*/
 	else if(node->data == "elseif"){
-		produce_code(g_node_nth_child(node, 0)); // elseif     
-		produce_code(g_node_nth_child(node, 1)); // boolean_expr
+		produce_code(g_node_nth_child(node, 0)); // boolean_expr
 
 		// Mark the jump address
 		guint endSbl = offset;
 		fprintf(stream, "	brfalse.s ELSEIF_%d\n\n", endSbl);
 		
 		fprintf(stream, "	nop\n");
-		produce_code(g_node_nth_child(node, 2)); // code
+		produce_code(g_node_nth_child(node, 1)); // code
 		fprintf(stream, "	nop\n");
 
 		fprintf(stream, "	nop\n");
 		fprintf(stream, "	br.s IL_LAST\n\n");
 		fprintf(stream, "	ELSEIF_%d: ", endSbl); // end of code, mark jump point
 
-		produce_code(g_node_nth_child(node, 3)); // elseif
+		produce_code(g_node_nth_child(node, 2)); // elseif
 	}
 
 	/* Else */
@@ -622,6 +622,7 @@ void produce_code(GNode * node)
 
 	/* While */	
 	else if(node->data == "while"){
+		loop_offset++;
 
 		// Branch out
 		guint endSbl = loop_offset;
@@ -643,20 +644,20 @@ void produce_code(GNode * node)
 		produce_code(g_node_nth_child(node, 2)); // endwhile
 		fprintf(stream, "	// End loop\n");
 		fprintf(stream, "	LOOP_END_%d: nop\n", endSbl);
-
-		loop_offset++;
 	}
 
 	/* Foreach */
 	else if(node->data == "foreach"){
+
+		loop_offset++;
+		guint endSbl = loop_offset;
 		
 		// Initialise counter variable
 		fprintf(stream, "	nop\n");
 		produce_code(g_node_nth_child(node, 0)); // expr
-		fprintf(stream, "	stloc.0\n");
+		fprintf(stream, "	stloc.s %d\n", endSbl);
 
 		// Branch off - while like
-		guint endSbl = loop_offset;
 		fprintf(stream, "	br.s LOOP_HEAD_%d\n", endSbl); // Jump to head
 		fprintf(stream, "	// Start loop (head: LOOP_HEAD_%d)\n", endSbl);
 
@@ -669,13 +670,13 @@ void produce_code(GNode * node)
 		// Increment counter
 		fprintf(stream, "	LOOP_INCR_%d: ", endSbl); 
 		fprintf(stream, "	nop\n");
-		fprintf(stream, "	ldloc.0\n");
+		fprintf(stream, "	ldloc.s %d\n", endSbl);
 		fprintf(stream, "	ldc.i4.1\n");
 		fprintf(stream, "	add\n");
-		fprintf(stream, "	stloc.0\n\n"); // Unload counter
+		fprintf(stream, "	stloc.s %d\n\n", endSbl); // Unload counter
 
 		fprintf(stream, "	LOOP_HEAD_%d: ", endSbl); // Mark head
-		fprintf(stream, "	ldloc.0\n"); // Reload counter
+		fprintf(stream, "	ldloc.s %d\n", endSbl); // Reload counter
 		produce_code(g_node_nth_child(node, 1)); // expr
 		
 		// Check condition
@@ -688,11 +689,7 @@ void produce_code(GNode * node)
 		produce_code(g_node_nth_child(node, 3)); // endforeach
 		fprintf(stream, "	// End loop\n");
 		fprintf(stream, "	LOOP_END_%d: nop\n", endSbl);
-
-		loop_offset++;
 	}
-
-	offset++;
 }
 
 void end_code()
